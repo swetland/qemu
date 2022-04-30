@@ -39,29 +39,29 @@ static uint64_t litex_uart_read(void *opaque, hwaddr addr,
                             unsigned int sz) {
 	LitexUartState *s = opaque;
 	switch (addr) {
-	case LXUART_RXTX: {
-		if (s->status & LXUART_EV_BIT_RX) {
+	case LX_UART_RXTX: {
+		if (s->status & LX_UART_EV_BIT_RX) {
 			uint32_t ch = s->rx;
-			s->status &= (~LXUART_EV_BIT_RX);
+			s->status &= (~LX_UART_EV_BIT_RX);
 			litex_uart_update_irq(s);
 			return ch;
 		}
 		break;
 	}
-	case LXUART_TXFULL:
-		return !(s->status & LXUART_EV_BIT_TX);
-	case LXUART_RXEMPTY:
-		return !(s->status & LXUART_EV_BIT_RX);
-	case LXUART_EV_STATUS:
+	case LX_UART_TXFULL:
+		return !(s->status & LX_UART_EV_BIT_TX);
+	case LX_UART_RXEMPTY:
+		return !(s->status & LX_UART_EV_BIT_RX);
+	case LX_UART_EV_STATUS:
 		return s->status;
-	case LXUART_EV_PENDING:
+	case LX_UART_EV_PENDING:
 		return s->pending;
-	case LXUART_EV_ENABLE:
+	case LX_UART_EV_ENABLE:
 		return s->enable;
-	case LXUART_TXEMPTY:
-		return !!(s->status & LXUART_EV_BIT_TX);
-	case LXUART_RXFULL:
-		return !!(s->status & LXUART_EV_BIT_RX);
+	case LX_UART_TXEMPTY:
+		return !!(s->status & LX_UART_EV_BIT_TX);
+	case LX_UART_RXFULL:
+		return !!(s->status & LX_UART_EV_BIT_RX);
 	}
 
 	return 0;
@@ -71,19 +71,19 @@ static void litex_uart_write(void *opaque, hwaddr addr,
                              uint64_t val, unsigned int sz) {
 	LitexUartState *s = opaque;
 	switch (addr) {
-	case LXUART_RXTX: {
+	case LX_UART_RXTX: {
 		unsigned char ch = val;
 		// todo: use non-blocking writes
 		qemu_chr_fe_write(&s->chr, &ch, 1);
-		s->pending = LXUART_EV_BIT_TX;
+		s->pending = LX_UART_EV_BIT_TX;
 		litex_uart_update_irq(s);
 		break;
 	}
-	case LXUART_EV_ENABLE:
-		s->enable = val & LXUART_EV_BIT_ALL;
+	case LX_UART_EV_ENABLE:
+		s->enable = val & LX_UART_EV_BIT_ALL;
 		litex_uart_update_irq(s);
 		break;
-	case LXUART_EV_PENDING: // write to clear
+	case LX_UART_EV_PENDING: // write to clear
 		s->pending &= (~val);
 		litex_uart_update_irq(s);
 		break;
@@ -93,14 +93,14 @@ static void litex_uart_write(void *opaque, hwaddr addr,
 static void litex_uart_do_rx(void *opaque, const uint8_t *buf, int size) {
 	LitexUartState *s = opaque;
 	s->rx = buf[0];
-	s->status |= LXUART_EV_BIT_RX;
-	s->pending |= LXUART_EV_BIT_RX;
+	s->status |= LX_UART_EV_BIT_RX;
+	s->pending |= LX_UART_EV_BIT_RX;
 	litex_uart_update_irq(s);
 }
 
 static int litex_uart_chk_rx(void *opaque) {
 	LitexUartState *s = opaque;
-	return (s->status & LXUART_EV_BIT_RX) == 0;
+	return (s->status & LX_UART_EV_BIT_RX) == 0;
 }
 
 static int litex_uart_be_change(void *opaque) {
@@ -119,8 +119,8 @@ static void litex_uart_realize(DeviceState *dev, Error **error) {
 
 static void litex_uart_reset(DeviceState *dev) {
 	LitexUartState *s = LITEX_UART(dev);
-	s->status = LXUART_EV_BIT_TX;
-	s->pending = LXUART_EV_BIT_TX;
+	s->status = LX_UART_EV_BIT_TX;
+	s->pending = LX_UART_EV_BIT_TX;
 	s->enable = 0;
 	qemu_irq_lower(s->irq);
 }
@@ -139,7 +139,7 @@ static void litex_uart_init(Object *obj) {
 	SysBusDevice *sbd = SYS_BUS_DEVICE(obj);
 	LitexUartState *s = LITEX_UART(obj);
 	memory_region_init_io(&s->mmio, OBJECT(s), &litex_uart_ops, s,
-	                      TYPE_LITEX_UART, LXUART_MAX);
+	                      TYPE_LITEX_UART, LX_UART_MAX);
 	sysbus_init_mmio(sbd, &s->mmio);
 	sysbus_init_irq(sbd, &s->irq);
 }
