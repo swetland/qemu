@@ -83,3 +83,10 @@ config SPIKE
     select MSI_NONBROKEN
     select RISCV_ACLINT
     select SIFIVE_PLIC
+
+config RISCV_MICRO
+    bool
+    select VEXRISCV_INTC
+    select SERIAL
+    select HTIF
+
