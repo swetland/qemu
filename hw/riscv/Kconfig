@@ -87,6 +87,5 @@ config SPIKE
 config RISCV_MICRO
     bool
     select VEXRISCV_INTC
-    select SERIAL
-    select HTIF
+    select LITEX_UART
 

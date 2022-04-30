@@ -26,7 +26,7 @@
 #include "hw/intc/vexriscv-intc.h"
 #include "sysemu/sysemu.h"
 #include "exec/address-spaces.h"
-#include "hw/char/serial.h"
+#include "hw/char/litex-uart.h"
 #include "hw/display/ramfb.h"
 
 static const struct MemmapEntry {
@@ -97,10 +97,8 @@ static void micro_machine_init(MachineState *ms) {
 	// Create Simple Local Interrupt Controller
 	mms->intc = vexriscv_intc_create();
 
-	// Create Generic Serial Port
-	serial_mm_init(sysmem, memmap[MICRO_UART0].base, 0,
-	               qdev_get_gpio_in(DEVICE(mms->intc), UART0_IRQ),
-	               399193, serial_hd(0), DEVICE_LITTLE_ENDIAN);
+	litex_uart_create(sysmem, memmap[MICRO_UART0].base, serial_hd(0),
+	                  qdev_get_gpio_in(DEVICE(mms->intc), UART0_IRQ));
 
 	riscv_setup_rom_reset_vec(ms, soc, start_addr,
 	                          memmap[MICRO_ROM].base,
