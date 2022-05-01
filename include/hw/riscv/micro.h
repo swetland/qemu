@@ -44,8 +44,8 @@ enum {
 };
 
 enum {
-	TIMER0_IRQ = 0,
-	UART0_IRQ = 1,
+	UART0_IRQ = 0,
+	TIMER0_IRQ = 1,
 };
 
 #endif

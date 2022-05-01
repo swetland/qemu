@@ -34,8 +34,8 @@ static const struct MemmapEntry {
 	hwaddr size;
 } memmap[] = {
 	[MICRO_ROM] =   { 0x00001000, 0x2000 },
-	[MICRO_UART0] = { 0x10000000, 0x100 },
 	[MICRO_DRAM] =  { 0x40000000, 0x0 },
+	[MICRO_UART0] = { 0xF0002800, 0x100 },
 };
 
 // MicroMachineState
