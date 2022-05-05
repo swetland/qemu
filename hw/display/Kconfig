@@ -134,3 +134,7 @@ config MACFB
     bool
     select FRAMEBUFFER
     depends on NUBUS
+
+config LITEX_FB
+    bool
+    select FRAMEBUFFER

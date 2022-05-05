@@ -35,6 +35,7 @@ softmmu_ss.add(when: 'CONFIG_TCX', if_true: files('tcx.c'))
 softmmu_ss.add(when: 'CONFIG_CG3', if_true: files('cg3.c'))
 softmmu_ss.add(when: 'CONFIG_MACFB', if_true: files('macfb.c'))
 softmmu_ss.add(when: 'CONFIG_NEXTCUBE', if_true: files('next-fb.c'))
+softmmu_ss.add(when: 'CONFIG_LITEX_FB', if_true: files('litex-fb.c'))
 
 specific_ss.add(when: 'CONFIG_VGA', if_true: files('vga.c'))
 
