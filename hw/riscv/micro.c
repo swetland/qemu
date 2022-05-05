@@ -27,15 +27,16 @@
 #include "sysemu/sysemu.h"
 #include "exec/address-spaces.h"
 #include "hw/char/litex-uart.h"
-#include "hw/display/ramfb.h"
+#include "hw/display/litex-fb.h"
 
 static const struct MemmapEntry {
 	hwaddr base;
 	hwaddr size;
 } memmap[] = {
-	[MICRO_ROM] =   { 0x00001000, 0x2000 },
-	[MICRO_DRAM] =  { 0x40000000, 0x0 },
-	[MICRO_UART0] = { 0xF0002800, 0x100 },
+	[MICRO_ROM]         = { 0x00001000, 0x2000 },
+	[MICRO_DRAM]        = { 0x40000000, 0x0 },
+	[MICRO_FRAMEBUFFER] = { 0xE0000000, 0x0 },
+	[MICRO_UART0]       = { 0xF0002800, 0x100 },
 };
 
 // MicroMachineState
@@ -100,6 +101,8 @@ static void micro_machine_init(MachineState *ms) {
 	litex_uart_create(sysmem, memmap[MICRO_UART0].base, serial_hd(0),
 	                  qdev_get_gpio_in(DEVICE(mms->intc), UART0_IRQ));
 
+	litex_fb_create(sysmem, memmap[MICRO_FRAMEBUFFER].base);
+
 	riscv_setup_rom_reset_vec(ms, soc, start_addr,
 	                          memmap[MICRO_ROM].base,
 	                          memmap[MICRO_ROM].size,
@@ -120,8 +123,6 @@ static void micro_machine_class_init(ObjectClass *oc, void *data) {
 	mc->max_cpus = MICRO_CPUS_MAX;
 	mc->is_default = true;
 	mc->numa_mem_supported = false;
-
-	machine_class_allow_dynamic_sysbus_dev(mc, TYPE_RAMFB_DEVICE);
 }
 
 static const TypeInfo micro_machine_type_info = {

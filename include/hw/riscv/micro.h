@@ -40,6 +40,7 @@ typedef struct MicroMachineState {
 enum {
 	MICRO_ROM,
 	MICRO_DRAM,
+	MICRO_FRAMEBUFFER,
 	MICRO_UART0,
 };
 
