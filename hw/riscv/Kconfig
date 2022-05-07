@@ -89,4 +89,5 @@ config RISCV_MICRO
     select VEXRISCV_INTC
     select LITEX_UART
     select LITEX_FB
+    select LITEX_TIMER
 

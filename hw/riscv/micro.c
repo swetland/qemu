@@ -28,6 +28,7 @@
 #include "exec/address-spaces.h"
 #include "hw/char/litex-uart.h"
 #include "hw/display/litex-fb.h"
+#include "hw/timer/litex-timer.h"
 
 static const struct MemmapEntry {
 	hwaddr base;
@@ -97,6 +98,9 @@ static void micro_machine_init(MachineState *ms) {
 
 	// Create Simple Local Interrupt Controller
 	mms->intc = vexriscv_intc_create();
+
+	litex_timer_create(sysmem, memmap[MICRO_TIMER0].base,
+	                  qdev_get_gpio_in(DEVICE(mms->intc), TIMER0_IRQ));
 
 	litex_uart_create(sysmem, memmap[MICRO_UART0].base, serial_hd(0),
 	                  qdev_get_gpio_in(DEVICE(mms->intc), UART0_IRQ));
