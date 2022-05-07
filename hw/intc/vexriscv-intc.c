@@ -109,8 +109,13 @@ static RISCVException vexriscv_s_intc_enable_wr(CPURISCVState *s, int csrno, tar
 	return RISCV_EXCP_NONE;
 }
 
-static RISCVException vexriscv_intc_pending_rd(CPURISCVState *s, int csrno, target_ulong *val) {
-	*val = qatomic_read(&vri_state->irq_pending_bits);
+static RISCVException vexriscv_m_intc_pending_rd(CPURISCVState *s, int csrno, target_ulong *val) {
+	*val = vri_state->irq_pending_bits & vri_state->irq_m_enable_bits;
+	return RISCV_EXCP_NONE;
+}
+
+static RISCVException vexriscv_s_intc_pending_rd(CPURISCVState *s, int csrno, target_ulong *val) {
+	*val = vri_state->irq_pending_bits & vri_state->irq_s_enable_bits;
 	return RISCV_EXCP_NONE;
 }
 
@@ -133,15 +138,15 @@ static riscv_csr_operations vexriscv_s_intc_enable_ops = {
 };
 
 static riscv_csr_operations vexriscv_m_intc_pending_ops = {
-	.name = "mintcenable",
+	.name = "mintpending",
 	.predicate = always,
-	.read = vexriscv_intc_pending_rd,
+	.read = vexriscv_m_intc_pending_rd,
 };
 
 static riscv_csr_operations vexriscv_s_intc_pending_ops = {
 	.name = "sintcpending",
 	.predicate = always,
-	.read = vexriscv_intc_pending_rd,
+	.read = vexriscv_s_intc_pending_rd,
 };
 
 DeviceState *vexriscv_intc_create(void) {
