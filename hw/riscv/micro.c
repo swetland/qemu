@@ -35,7 +35,7 @@ static const struct MemmapEntry {
 } memmap[] = {
 	[MICRO_ROM]         = { 0x00001000, 0x2000 },
 	[MICRO_DRAM]        = { 0x40000000, 0x0 },
-	[MICRO_FRAMEBUFFER] = { 0xE0000000, 0x0 },
+	[MICRO_TIMER0]      = { 0xF0002000, 0x100 },
 	[MICRO_UART0]       = { 0xF0002800, 0x100 },
 };
 
@@ -101,7 +101,7 @@ static void micro_machine_init(MachineState *ms) {
 	litex_uart_create(sysmem, memmap[MICRO_UART0].base, serial_hd(0),
 	                  qdev_get_gpio_in(DEVICE(mms->intc), UART0_IRQ));
 
-	litex_fb_create(sysmem, memmap[MICRO_FRAMEBUFFER].base);
+	litex_fb_create(ms->ram, 0x00c00000);
 
 	riscv_setup_rom_reset_vec(ms, soc, start_addr,
 	                          memmap[MICRO_ROM].base,
