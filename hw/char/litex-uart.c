@@ -28,28 +28,8 @@
 // The actual hw has some quirky behaviour...
 #define BUG_COMPAT 1
 
-#ifdef BUG_COMPAT
-// litex's implementation has the pending bits *after* the enable mask
-inline static int is_irq_pending(LitexUartState *s) {
-	return s->pending;
-}
-inline static void set_irq_pending(LitexUartState *s, uint32_t bit) {
-	if (s->enable & bit) {
-		qatomic_or(&s->pending, bit);
-	}
-}
-#else
-inline static int is_irq_pending(LitexUartState *s) {
-	return s->pending & s->enable;
-}
-inline static void set_irq_pending(LitexUartState *s, uint32_t bit) {
-	qatomic_or(&s->pending, bit);
-}
-#endif
-
-
 static void litex_uart_update_irq(LitexUartState *s) {
-	if (is_irq_pending(s)) {
+	if (s->pending & s->enable) {
 		qemu_irq_raise(s->irq);
 	} else {
 		qemu_irq_lower(s->irq);
@@ -57,13 +37,15 @@ static void litex_uart_update_irq(LitexUartState *s) {
 }
 
 static uint64_t litex_uart_read(void *opaque, hwaddr addr,
-                            unsigned int sz) {
+                                unsigned int sz) {
 	LitexUartState *s = opaque;
 	switch (addr) {
 	case LX_UART_RXTX: {
 		if (s->status & LX_UART_EV_BIT_RX) {
 			uint32_t ch = s->rx;
+#if !BUG_COMPAT
 			qatomic_and(&s->status, ~LX_UART_EV_BIT_RX);
+#endif
 			litex_uart_update_irq(s);
 			return ch;
 		}
@@ -107,27 +89,21 @@ static void litex_uart_write(void *opaque, hwaddr addr,
 		unsigned char ch = val;
 		// todo: use non-blocking writes
 		qemu_chr_fe_write(&s->chr, &ch, 1);
-		set_irq_pending(s, LX_UART_EV_BIT_TX);
+		qatomic_or(&s->pending, LX_UART_EV_BIT_TX);
 		litex_uart_update_irq(s);
 		break;
 	}
 	case LX_UART_EV_ENABLE:
 		val &= LX_UART_EV_BIT_ALL;
 		s->enable = val;
-#if BUG_COMPAT
-		// enabled IRQs pending immediately tracks status
-		qatomic_or(&s->pending, s->status & val);
-		// disabled IRQs pending immediately clears pending bits
-		qatomic_and(&s->pending, val);
-#endif
 		litex_uart_update_irq(s);
 		break;
 	case LX_UART_EV_PENDING: // write to clear
-#if BUG_COMPAT
-		// enabled IRQs remain pending while status active
-		val &= ~(s->enable & s->status);
-#endif
 		qatomic_and(&s->pending, ~val);
+#if BUG_COMPAT
+		// status.RX is cleared when pending.RX is
+		qatomic_and(&s->status, LX_UART_EV_BIT_TX | (~val));
+#endif
 		litex_uart_update_irq(s);
 		break;
 	}
@@ -137,7 +113,7 @@ static void litex_uart_do_rx(void *opaque, const uint8_t *buf, int size) {
 	LitexUartState *s = opaque;
 	s->rx = buf[0];
 	qatomic_or(&s->status, LX_UART_EV_BIT_RX);
-	set_irq_pending(s, LX_UART_EV_BIT_RX);
+	qatomic_or(&s->pending, LX_UART_EV_BIT_RX);
 	litex_uart_update_irq(s);
 }
 
