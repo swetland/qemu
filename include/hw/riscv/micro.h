@@ -42,11 +42,12 @@ enum {
 	MICRO_DRAM,
 	MICRO_FRAMEBUFFER,
 	MICRO_UART0,
+	MICRO_TIMER0,
 };
 
 enum {
-	UART0_IRQ = 0,
-	TIMER0_IRQ = 1,
+	TIMER0_IRQ = 0,
+	UART0_IRQ = 1,
 };
 
 #endif
