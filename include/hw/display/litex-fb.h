@@ -25,7 +25,7 @@
 typedef struct {
 	SysBusDevice parent;
 
-	MemoryRegion vram;
+	MemoryRegion *vram;
 	QemuConsole *con;
 
 	uint32_t width;
@@ -41,6 +41,6 @@ typedef struct {
 #define TYPE_LITEX_FB "riscv.litex.fb"
 #define LITEX_FB(obj) OBJECT_CHECK(LitexFrameBufferState, (obj), TYPE_LITEX_FB)
 
-LitexFrameBufferState* litex_fb_create(MemoryRegion* mr, hwaddr base);
+LitexFrameBufferState* litex_fb_create(MemoryRegion* mr, uint32_t offset);
 
 #endif

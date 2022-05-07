@@ -28,7 +28,7 @@ static void litex_fb_update(void *opaque) {
 
 	if (fbs->new_mode) {
 		fbs->new_mode = 0;
-		uint8_t *ptr = memory_region_get_ram_ptr(&fbs->vram);
+		uint8_t *ptr = memory_region_get_ram_ptr(fbs->vram);
 		ds = qemu_create_displaysurface_from(fbs->width, fbs->height,
 		                                     fbs->format, fbs->stride,
 		                                     ptr + fbs->offset);
@@ -45,7 +45,6 @@ static void litex_fb_update(void *opaque) {
 }
 
 static const GraphicHwOps litex_fb_ops = {
-	//.invalidate = litex_fb_invalidate,
 	.gfx_update = litex_fb_update,
 };
 
@@ -56,18 +55,13 @@ static void litex_fb_realize(DeviceState *dev, Error **error) {
 	fbs->height = 480;
 	fbs->stride = fbs->width * 4;
 	fbs->format = PIXMAN_LE_x8r8g8b8;
-	fbs->offset = 0;
 	fbs->size = fbs->stride * fbs->height;
 	fbs->new_mode = 1;
-
-	memory_region_init_ram(&fbs->vram, OBJECT(dev), "litex-video-ram",
-	                       fbs->width * fbs->height * 4, &error_fatal);
-	sysbus_init_mmio(SYS_BUS_DEVICE(dev), &fbs->vram);
 
 	fbs->con = graphic_console_init(dev, 0, &litex_fb_ops, fbs);
 	qemu_console_resize(fbs->con, fbs->width, fbs->height);
 
-	memory_region_set_log(&fbs->vram, true, DIRTY_MEMORY_VGA);
+	memory_region_set_log(fbs->vram, true, DIRTY_MEMORY_VGA);
 }
 
 static void litex_fb_class_init(ObjectClass *oc, void *data) {
@@ -89,11 +83,12 @@ static void litex_fb_register_types(void) {
 
 type_init(litex_fb_register_types)
 
-LitexFrameBufferState* litex_fb_create(MemoryRegion* mr, hwaddr base) {
+LitexFrameBufferState* litex_fb_create(MemoryRegion* mr, uint32_t offset) {
 	DeviceState *dev = qdev_new(TYPE_LITEX_FB);
 	SysBusDevice *sbd = SYS_BUS_DEVICE(dev);
 	LitexFrameBufferState *fbs = LITEX_FB(dev);
+	fbs->vram = mr;
+	fbs->offset = offset;
 	sysbus_realize_and_unref(sbd, &error_fatal);
-	sysbus_mmio_map(sbd, 0, base);
 	return fbs;
 }
