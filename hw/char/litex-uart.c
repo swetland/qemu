@@ -47,6 +47,7 @@ static uint64_t litex_uart_read(void *opaque, hwaddr addr,
 			qatomic_and(&s->status, ~LX_UART_EV_BIT_RX);
 #endif
 			litex_uart_update_irq(s);
+			qemu_chr_fe_accept_input(&s->chr);
 			return ch;
 		}
 #if BUG_COMPAT
