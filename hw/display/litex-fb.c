@@ -53,8 +53,8 @@ static void litex_fb_realize(DeviceState *dev, Error **error) {
 
 	fbs->width = 640;
 	fbs->height = 480;
-	fbs->stride = fbs->width * 4;
-	fbs->format = PIXMAN_LE_x8r8g8b8;
+	fbs->stride = fbs->width * 2; // * 4
+	fbs->format = PIXMAN_r5g6b5; // PIXMAN_LE_x8r8g8b8
 	fbs->size = fbs->stride * fbs->height;
 	fbs->new_mode = 1;
 
