@@ -83,6 +83,7 @@ static void micro_machine_init(MachineState *ms) {
 
 	if (ms->kernel_filename) {
 		kstart = riscv_calc_kernel_start_addr(soc, fw_end);
+		kstart = start_addr + 0x8000;
 		kentry = riscv_load_kernel(ms->kernel_filename, kstart, NULL);
 #if 0
 		if (ms->initrd_filename) {
