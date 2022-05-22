@@ -29,6 +29,24 @@
 #include "hw/char/litex-uart.h"
 #include "hw/display/litex-fb.h"
 #include "hw/timer/litex-timer.h"
+#include "hw/net/liteeth.h"
+
+void litex_ethmac_create(MemoryRegion *mr, hwaddr base0, hwaddr base1, qemu_irq irq);
+
+void litex_ethmac_create(MemoryRegion *mr, hwaddr base0, hwaddr base1, qemu_irq irq) {
+	DeviceState *dev = qdev_new(TYPE_LITEETH);
+	SysBusDevice *sbd = SYS_BUS_DEVICE(dev);
+
+	NICInfo *nd = &nd_table[0];
+	qemu_check_nic_model(nd, TYPE_LITEETH);
+	qdev_set_nic_properties(dev, nd);
+
+	sysbus_realize_and_unref(sbd, &error_fatal);
+	memory_region_add_subregion(mr, base0, sysbus_mmio_get_region(sbd, 0));
+	memory_region_add_subregion(mr, base1, sysbus_mmio_get_region(sbd, 1));
+	sysbus_connect_irq(sbd, 0, irq);
+
+}
 
 static const struct MemmapEntry {
 	hwaddr base;
@@ -36,8 +54,10 @@ static const struct MemmapEntry {
 } memmap[] = {
 	[MICRO_ROM]         = { 0x00001000, 0x2000 },
 	[MICRO_DRAM]        = { 0x40000000, 0x0 },
+        [MICRO_ETHMAC_SRAM] = { 0xE0000000, 0x2000 },
 	[MICRO_TIMER0]      = { 0xF0002000, 0x100 },
 	[MICRO_UART0]       = { 0xF0002800, 0x100 },
+	[MICRO_ETHMAC]      = { 0xF0005800, 0x100 },
 };
 
 // MicroMachineState
@@ -107,6 +127,10 @@ static void micro_machine_init(MachineState *ms) {
 	                  qdev_get_gpio_in(DEVICE(mms->intc), UART0_IRQ));
 
 	litex_fb_create(ms->ram, 0x00c00000);
+
+	litex_ethmac_create(sysmem, memmap[MICRO_ETHMAC].base,
+			memmap[MICRO_ETHMAC_SRAM].base,
+			qdev_get_gpio_in(DEVICE(mms->intc), ETHMAC_IRQ));
 
 	riscv_setup_rom_reset_vec(ms, soc, start_addr,
 	                          memmap[MICRO_ROM].base,
